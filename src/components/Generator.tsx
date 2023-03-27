@@ -245,13 +245,27 @@ export default () => {
           >
             Send
           </button>
-          <button
+          {/* <button
             title="Clear"
             onClick={clear}
             disabled={systemRoleEditing()}
             gen-slate-btn
           >
             <IconClear />
+          </button> */}
+          <button
+            onClick={() => {
+              navigator.clipboard.writeText(
+                messageList()
+                  .map(
+                    (message, index) =>
+                      `### ${index}: ${message.role}\n\n ${message.content}\n\n`
+                  )
+                  .join("\n")
+              );
+            }}
+          >
+            Copy
           </button>
         </div>
       </Show>
