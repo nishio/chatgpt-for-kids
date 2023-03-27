@@ -259,7 +259,7 @@ export default () => {
                 messageList()
                   .map(
                     (message, index) =>
-                      `### ${index}: ${message.role}\n\n ${message.content}\n\n`
+                      `## ${index}: ${message.role}\n\n ${message.content}\n\n`
                   )
                   .join("\n")
               );
