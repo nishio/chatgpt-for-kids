@@ -16,7 +16,7 @@ export const generatePayload = (
   body: JSON.stringify({
     model,
     messages,
-    temperature: 0.6,
+    temperature: 0.0,
     stream: true,
   }),
 });
