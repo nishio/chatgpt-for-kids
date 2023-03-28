@@ -7,6 +7,19 @@ import SystemRoleSettings from "./SystemRoleSettings";
 import ErrorMessageItem from "./ErrorMessageItem";
 import type { ChatMessage, ErrorMessage } from "@/types";
 
+import firebase from "firebase/compat/app";
+import "firebase/compat/auth";
+// ここでFirebaseの設定をインポートまたは定義します
+const firebaseConfig = {
+  apiKey: "AIzaSyBa_r-q6Mf4I0VaIZ8yTXDa1M6SEjCsutM",
+  authDomain: "chatgpt-d546a.firebaseapp.com",
+  projectId: "chatgpt-d546a",
+  storageBucket: "chatgpt-d546a.appspot.com",
+  messagingSenderId: "699273813437",
+  appId: "1:699273813437:web:47a8b6e4b8790aa21346d4",
+  measurementId: "G-T2Z8RMCC3N",
+};
+
 export default () => {
   let inputRef: HTMLTextAreaElement;
   const [currentSystemRoleSettings, setCurrentSystemRoleSettings] =
@@ -19,7 +32,22 @@ export default () => {
   const [loading, setLoading] = createSignal(false);
   const [controller, setController] = createSignal<AbortController>(null);
 
+  async function signInAnonymously(auth): Promise<string> {
+    try {
+      const result = await auth.signInAnonymously();
+      return result.user?.uid || "";
+    } catch (error) {
+      console.error("Error signing in anonymously: ", error);
+      return "";
+    }
+  }
+
   onMount(() => {
+    firebase.initializeApp(firebaseConfig);
+    // @ts-ignore
+    const auth = firebase.auth();
+    console.log(auth);
+    console.log(signInAnonymously(auth));
     try {
       if (localStorage.getItem("messageList"))
         setMessageList(JSON.parse(localStorage.getItem("messageList")));
@@ -254,21 +282,21 @@ export default () => {
             <IconClear />
           </button> */}
         </div>
-          <button
-            onClick={() => {
-              navigator.clipboard.writeText(
-                messageList()
-                  .map(
-                    (message, index) =>
-                      `## ${index}: ${message.role}\n\n ${message.content}\n\n`
-                  )
-                  .join("\n")
-              );
-            }}
+        <button
+          onClick={() => {
+            navigator.clipboard.writeText(
+              messageList()
+                .map(
+                  (message, index) =>
+                    `## ${index}: ${message.role}\n\n ${message.content}\n\n`
+                )
+                .join("\n")
+            );
+          }}
           gen-slate-btn
-          >
+        >
           この会話をコピー
-          </button>
+        </button>
       </Show>
     </div>
   );
