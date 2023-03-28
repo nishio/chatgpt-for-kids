@@ -8,6 +8,7 @@ import ErrorMessageItem from "./ErrorMessageItem";
 import type { ChatMessage, ErrorMessage } from "@/types";
 
 import firebase from "firebase/compat/app";
+import "firebase/compat/firestore";
 import "firebase/compat/auth";
 // ここでFirebaseの設定をインポートまたは定義します
 const firebaseConfig = {
@@ -19,6 +20,13 @@ const firebaseConfig = {
   appId: "1:699273813437:web:47a8b6e4b8790aa21346d4",
   measurementId: "G-T2Z8RMCC3N",
 };
+
+let auth, db;
+
+interface ChatRoom {
+  id: string;
+  name: string;
+}
 
 export default () => {
   let inputRef: HTMLTextAreaElement;
@@ -42,12 +50,49 @@ export default () => {
     }
   }
 
+  async function getChatRooms(): Promise<ChatRoom[]> {
+    const userId = await signInAnonymously(auth);
+    const rooms: ChatRoom[] = [];
+    const querySnapshot = await db
+      .collection("users")
+      .doc(userId)
+      .collection("rooms")
+      .get();
+
+    querySnapshot.forEach((doc) => {
+      const data = doc.data();
+      rooms.push({ id: doc.id, name: data.name });
+    });
+
+    // firstroomが存在しない場合は作成する
+    if (!rooms.some((room) => room.name === "firstroom")) {
+      const firstRoom = await createChatRoom("firstroom");
+      rooms.push(firstRoom);
+    }
+
+    return rooms;
+  }
+
+  async function createChatRoom(roomName: string): Promise<ChatRoom> {
+    const userId = await signInAnonymously(auth);
+    console.log("userId: ", userId);
+    const roomRef = await db
+      .collection("users")
+      .doc(userId)
+      .collection("rooms")
+      .add({ name: roomName });
+    const result = { id: roomRef.id, name: roomName };
+    console.log("result: ", result);
+    return result;
+  }
+
   onMount(() => {
     firebase.initializeApp(firebaseConfig);
     // @ts-ignore
-    const auth = firebase.auth();
-    console.log(auth);
-    console.log(signInAnonymously(auth));
+    auth = firebase.auth();
+    db = firebase.firestore();
+    console.log("create chat room");
+    createChatRoom("first_room");
     try {
       if (localStorage.getItem("messageList"))
         setMessageList(JSON.parse(localStorage.getItem("messageList")));
