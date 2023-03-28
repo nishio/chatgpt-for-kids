@@ -216,9 +216,9 @@ export default () => {
         when={!loading()}
         fallback={() => (
           <div class="gen-cb-wrapper">
-            <span>AI is thinking...</span>
+            <span>AIは考え中...</span>
             <div class="gen-cb-stop" onClick={stopStreamFetch}>
-              Stop
+              止める
             </div>
           </div>
         )}
@@ -243,7 +243,7 @@ export default () => {
             disabled={systemRoleEditing()}
             gen-slate-btn
           >
-            Send
+            送る
           </button>
           {/* <button
             title="Clear"
@@ -253,6 +253,7 @@ export default () => {
           >
             <IconClear />
           </button> */}
+        </div>
           <button
             onClick={() => {
               navigator.clipboard.writeText(
@@ -264,10 +265,10 @@ export default () => {
                   .join("\n")
               );
             }}
+          gen-slate-btn
           >
-            Copy
+          この会話をコピー
           </button>
-        </div>
       </Show>
     </div>
   );
