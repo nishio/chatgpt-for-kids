@@ -50,53 +50,80 @@ export default () => {
     }
   }
 
-  async function getChatRooms(): Promise<ChatRoom[]> {
+  async function getOrCreateFirstRoom(): Promise<string> {
     const userId = await signInAnonymously(auth);
-    const rooms: ChatRoom[] = [];
+    const roomRef = db
+      .collection("users")
+      .doc(userId)
+      .collection("rooms")
+      .doc("firstroom");
+    const roomDoc = await roomRef.get();
+
+    if (!roomDoc.exists) {
+      await roomRef.set({ name: "firstroom" });
+    }
+
+    return roomRef.id;
+  }
+
+  async function restoreChatLog(roomId: string): Promise<ChatMessage[]> {
+    const userId = await signInAnonymously(auth);
+    const chatLog: ChatMessage[] = [];
     const querySnapshot = await db
       .collection("users")
       .doc(userId)
       .collection("rooms")
+      .doc(roomId)
+      .collection("messages")
+      .orderBy("timestamp")
       .get();
 
     querySnapshot.forEach((doc) => {
-      const data = doc.data();
-      rooms.push({ id: doc.id, name: data.name });
+      const data = doc.data() as ChatMessage;
+      chatLog.push({
+        role: data.role,
+        content: data.content,
+      });
     });
 
-    // firstroomが存在しない場合は作成する
-    if (!rooms.some((room) => room.name === "firstroom")) {
-      const firstRoom = await createChatRoom("firstroom");
-      rooms.push(firstRoom);
-    }
-
-    return rooms;
+    setMessageList(chatLog);
+    return chatLog;
   }
 
-  async function createChatRoom(roomName: string): Promise<ChatRoom> {
+  async function saveChatMessage(roomId: string, chatMessage: ChatMessage) {
     const userId = await signInAnonymously(auth);
-    console.log("userId: ", userId);
-    const roomRef = await db
+    await db
       .collection("users")
       .doc(userId)
       .collection("rooms")
-      .add({ name: roomName });
-    const result = { id: roomRef.id, name: roomName };
-    console.log("result: ", result);
-    return result;
+      .doc(roomId)
+      .collection("messages")
+      .add({
+        ...chatMessage,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+      });
   }
+
+  const saveMessages = async () => {
+    const roomId = "firstroom";
+    messageList().forEach((message) => {
+      saveChatMessage(roomId, message);
+    });
+  };
 
   onMount(() => {
     firebase.initializeApp(firebaseConfig);
     // @ts-ignore
     auth = firebase.auth();
     db = firebase.firestore();
-    console.log("create chat room");
-    createChatRoom("first_room");
-    try {
-      if (localStorage.getItem("messageList"))
-        setMessageList(JSON.parse(localStorage.getItem("messageList")));
+    // @ts-ignore
+    window.saveMessages = saveMessages;
 
+    getOrCreateFirstRoom().then(restoreChatLog);
+
+    console.log(restoreChatLog("firstroom"));
+
+    try {
       if (localStorage.getItem("systemRoleSettings"))
         setCurrentSystemRoleSettings(
           localStorage.getItem("systemRoleSettings")
@@ -124,13 +151,13 @@ export default () => {
     // @ts-expect-error
     if (window?.umami) umami.trackEvent("chat_generate");
     inputRef.value = "";
-    setMessageList([
-      ...messageList(),
-      {
-        role: "user",
-        content: inputValue,
-      },
-    ]);
+    const m: ChatMessage = {
+      role: "user",
+      content: inputValue,
+    };
+    setMessageList([...messageList(), m]);
+    saveChatMessage("firstroom", m);
+
     requestWithLatestMessage();
   };
 
@@ -212,13 +239,13 @@ export default () => {
 
   const archiveCurrentMessage = () => {
     if (currentAssistantMessage()) {
-      setMessageList([
-        ...messageList(),
-        {
-          role: "assistant",
-          content: currentAssistantMessage(),
-        },
-      ]);
+      const m: ChatMessage = {
+        role: "assistant",
+        content: currentAssistantMessage(),
+      };
+      setMessageList([...messageList(), m]);
+      saveChatMessage("firstroom", m);
+
       setCurrentAssistantMessage("");
       setLoading(false);
       setController(null);
