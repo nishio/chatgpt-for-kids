@@ -1,9 +1,9 @@
-import IconRefresh from './icons/Refresh'
-import type { ErrorMessage } from '@/types'
+import IconRefresh from "./icons/Refresh";
+import type { ErrorMessage } from "@/types";
 
 interface Props {
-  data: ErrorMessage
-  onRetry?: () => void
+  data: ErrorMessage;
+  onRetry?: () => void;
 }
 
 export default ({ data, onRetry }: Props) => {
@@ -15,10 +15,10 @@ export default ({ data, onRetry }: Props) => {
         <div class="fie px-3 mb-2">
           <div onClick={onRetry} class="gpt-retry-btn border-red/50 text-red">
             <IconRefresh />
-            <span>Regenerate</span>
+            <span>再生成する</span>
           </div>
         </div>
       )}
     </div>
-  )
-}
+  );
+};
