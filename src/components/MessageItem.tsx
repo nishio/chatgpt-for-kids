@@ -80,12 +80,13 @@ export default ({ role, message, showRetry, onRetry }: Props) => {
           class="message prose break-words overflow-hidden"
           innerHTML={htmlString()}
         />
+        {/* <input type="checkbox">使う</input> */}
       </div>
       {showRetry?.() && onRetry && (
         <div class="fie px-3 mb-2">
           <div onClick={onRetry} class="gpt-retry-btn">
             <IconRefresh />
-            <span>Regenerate</span>
+            <span>再生成</span>
           </div>
         </div>
       )}
