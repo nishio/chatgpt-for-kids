@@ -1,9 +1,8 @@
 import type { APIRoute } from "astro";
-// import { encode } from "gpt-3-encoder";
+import { encode } from "gpt-3-encoder";
 
 export const get_size = (s: string) => {
-  // return encode(s).length;
-  return 0;
+  return encode(s).length;
 };
 
 export const post: APIRoute = async (context) => {
