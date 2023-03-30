@@ -1,7 +1,6 @@
 import { Index, Show, createSignal, onCleanup, onMount } from "solid-js";
 import { useThrottleFn } from "solidjs-use";
 import { generateSignature } from "@/utils/auth";
-import IconClear from "./icons/Clear";
 import MessageItem from "./MessageItem";
 import SystemRoleSettings from "./SystemRoleSettings";
 import ErrorMessageItem from "./ErrorMessageItem";
@@ -316,7 +315,7 @@ export default () => {
         when={!loading()}
         fallback={() => (
           <div class="gen-cb-wrapper">
-            <span>AIは考え中...</span>
+            <span>考え中...</span>
             <div class="gen-cb-stop" onClick={stopStreamFetch}>
               止める
             </div>
@@ -339,13 +338,16 @@ export default () => {
             class="gen-textarea"
           />
         </div>
+        <div>
         <button
           onClick={handleButtonClick}
           disabled={systemRoleEditing()}
           gen-slate-btn
         >
           送る
-        </button>{" "}
+          </button>
+        </div>
+        <div>
         <button
           title="Clear"
           onClick={clear}
@@ -369,6 +371,7 @@ export default () => {
         >
           この会話をコピー
         </button>
+        </div>
       </Show>
     </div>
   );
