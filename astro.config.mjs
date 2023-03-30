@@ -2,9 +2,9 @@ import { defineConfig } from "astro/config";
 import unocss from "unocss/astro";
 import solidJs from "@astrojs/solid-js";
 import { VitePWA } from "vite-plugin-pwa";
-// import vercel from "@astrojs/vercel/edge";
+import vercel from "@astrojs/vercel/edge";
 import vercelDisableBlocks from "./plugins/vercelDisableBlocks";
-import vercel from "@astrojs/vercel/serverless";
+// import vercel from "@astrojs/vercel/serverless";
 
 // https://astro.build/config
 export default defineConfig({
