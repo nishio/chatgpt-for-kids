@@ -2,7 +2,7 @@ import { createParser } from "eventsource-parser";
 import type { ParsedEvent, ReconnectInterval } from "eventsource-parser";
 import type { ChatMessage } from "@/types";
 
-const model = import.meta.env.OPENAI_API_MODEL;
+const model = "gpt-4";
 
 export const generatePayload = (
   apiKey: string,
