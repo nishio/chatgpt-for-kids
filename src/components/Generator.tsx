@@ -38,6 +38,7 @@ export default () => {
     createSignal("");
   const [loading, setLoading] = createSignal(false);
   const [controller, setController] = createSignal<AbortController>(null);
+  const [numToken, setNumToken] = createSignal(0);
 
   async function signInAnonymously(auth): Promise<string> {
     try {
@@ -59,6 +60,30 @@ export default () => {
         .join("\n")
     );
   };
+
+  function debounce(fn, delay) {
+    let timeout;
+    return function (...args) {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => fn.apply(this, args), delay);
+    };
+  }
+
+  async function count_token(s) {
+    if (s === undefined) {
+      s = inputRef.value;
+    }
+    const response = await fetch("/api/count_token", {
+      method: "POST",
+      body: JSON.stringify({
+        text: inputRef.value,
+      }),
+    });
+    const num_token = await response.json();
+    console.log(num_token);
+    setNumToken(num_token.size);
+  }
+
   async function getOrCreateFirstRoom(): Promise<string> {
     const userId = await signInAnonymously(auth);
     const roomRef = db
@@ -288,9 +313,7 @@ export default () => {
   };
 
   const handleKeydown = (e: KeyboardEvent) => {
-    if (e.isComposing || e.shiftKey) return;
-
-    if (e.key === "Enter") handleButtonClick();
+    debounce(count_token, 1000)();
   };
 
   return (
@@ -349,26 +372,27 @@ export default () => {
           />
         </div>
         <div>
-        <button
-          onClick={handleButtonClick}
-          disabled={systemRoleEditing()}
-          gen-slate-btn
-        >
-          送る
+          <button
+            onClick={handleButtonClick}
+            disabled={systemRoleEditing()}
+            gen-slate-btn
+          >
+            送る
           </button>
+          <span>(トークン: {numToken})</span>
         </div>
         <div>
-        <button
-          title="Clear"
-          onClick={clear}
-          disabled={systemRoleEditing()}
-          gen-slate-btn
-        >
-          過去ログを消す
-        </button>{" "}
+          <button
+            title="Clear"
+            onClick={clear}
+            disabled={systemRoleEditing()}
+            gen-slate-btn
+          >
+            過去ログを消す
+          </button>{" "}
           <button onClick={copy_log} gen-slate-btn>
-          この会話をコピー
-        </button>
+            この会話をコピー
+          </button>
         </div>
       </Show>
     </div>
