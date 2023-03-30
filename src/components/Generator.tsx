@@ -49,6 +49,16 @@ export default () => {
     }
   }
 
+  const copy_log = () => {
+    navigator.clipboard.writeText(
+      messageList()
+        .map(
+          (message, index) =>
+            `## ${index}: ${message.role}\n\n ${message.content}\n\n`
+        )
+        .join("\n")
+    );
+  };
   async function getOrCreateFirstRoom(): Promise<string> {
     const userId = await signInAnonymously(auth);
     const roomRef = db
@@ -356,19 +366,7 @@ export default () => {
         >
           過去ログを消す
         </button>{" "}
-        <button
-          onClick={() => {
-            navigator.clipboard.writeText(
-              messageList()
-                .map(
-                  (message, index) =>
-                    `## ${index}: ${message.role}\n\n ${message.content}\n\n`
-                )
-                .join("\n")
-            );
-          }}
-          gen-slate-btn
-        >
+          <button onClick={copy_log} gen-slate-btn>
           この会話をコピー
         </button>
         </div>
