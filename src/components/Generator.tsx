@@ -379,7 +379,7 @@ export default () => {
           >
             送る
           </button>
-          <span>(トークン: {numToken})</span>
+          {/* <span>(トークン: {numToken})</span> */}
         </div>
         <div>
           <button
