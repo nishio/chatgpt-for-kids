@@ -388,8 +388,11 @@ export default () => {
             disabled={systemRoleEditing()}
             gen-slate-btn
           >
-            過去ログを消す
-          </button>{" "}
+            過去ログを隠す
+          </button>
+            <a href="https://scrapbox.io/nishio/%E4%B8%AD%E9%AB%98%E7%94%9F%E3%81%AE%E3%81%9F%E3%82%81%E3%81%AEChatGPT#642a7087aff09e0000efee0e">
+              [?]
+          </a>{" "}
           <button onClick={copy_log} gen-slate-btn>
             この会話をコピー
           </button>
