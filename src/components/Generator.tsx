@@ -120,6 +120,7 @@ export default () => {
       chatLog.push({
         role: data.role,
         content: data.content,
+        to_use: data.to_use ?? true,
       });
     });
 
@@ -192,6 +193,7 @@ export default () => {
     const m: ChatMessage = {
       role: "user",
       content: inputValue,
+      to_use: true,
     };
     setMessageList([...messageList(), m]);
     saveChatMessage("firstroom", m);
@@ -220,6 +222,7 @@ export default () => {
         requestMessageList.unshift({
           role: "system",
           content: currentSystemRoleSettings(),
+          to_use: true,
         });
       }
       const response = await fetch("/api/generate", {
@@ -271,6 +274,7 @@ export default () => {
       const m: ChatMessage = {
         role: "assistant",
         content: currentAssistantMessage(),
+        to_use: true,
       };
       setMessageList([...messageList(), m]);
       saveChatMessage("firstroom", m);
@@ -324,6 +328,7 @@ export default () => {
           <MessageItem
             role={message().role}
             message={message().content}
+            to_use={message().to_use}
             showRetry={() =>
               message().role === "assistant" &&
               index === messageList().length - 1

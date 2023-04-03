@@ -10,11 +10,12 @@ import type { ChatMessage } from "@/types";
 interface Props {
   role: ChatMessage["role"];
   message: Accessor<string> | string;
+  to_use: Accessor<boolean>;
   showRetry?: Accessor<boolean>;
   onRetry?: () => void;
 }
 
-export default ({ role, message, showRetry, onRetry }: Props) => {
+export default ({ role, message, to_use, showRetry, onRetry }: Props) => {
   const roleClass = {
     system: "bg-gradient-to-r from-gray-300 via-gray-200 to-gray-300",
     user: "bg-gradient-to-r from-purple-400 to-yellow-400",
@@ -69,13 +70,11 @@ export default ({ role, message, showRetry, onRetry }: Props) => {
 
     return "";
   };
-
+  const checkbox = <input type="checkbox" checked={to_use()} />;
   return (
     <div class="py-2 -mx-4 px-4 transition-colors md:hover:bg-slate/3">
       <div class="flex gap-3 rounded-lg" class:op-75={role === "user"}>
-        <div class="w-7 h-7 mt-4">
-          <input type="checkbox" checked />
-        </div>
+        <div class="w-7 h-7 mt-4">{checkbox}</div>
         <div
           class={`shrink-0 w-7 h-7 mt-4 rounded-full op-80 ${roleClass[role]}`}
         />
