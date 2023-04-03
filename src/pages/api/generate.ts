@@ -1,22 +1,15 @@
 // #vercel-disable-blocks
-import { ProxyAgent, fetch } from "undici";
+import { fetch } from "undici";
 // #vercel-end
 import { generatePayload, parseOpenAIStream } from "@/utils/openAI";
-import { verifySignature } from "@/utils/auth";
 import type { APIRoute } from "astro";
 
 const apiKey = import.meta.env.OPENAI_API_KEY;
-const httpsProxy = import.meta.env.HTTPS_PROXY;
-const baseUrl = (
-  import.meta.env.OPENAI_API_BASE_URL || "https://api.openai.com"
-)
-  .trim()
-  .replace(/\/$/, "");
-const sitePassword = import.meta.env.SITE_PASSWORD;
+const baseUrl = "https://api.openai.com";
 
 export const post: APIRoute = async (context) => {
   const body = await context.request.json();
-  const { sign, time, messages, pass, mode } = body;
+  const { messages, mode } = body;
   if (!messages) {
     return new Response(
       JSON.stringify({
@@ -27,37 +20,8 @@ export const post: APIRoute = async (context) => {
       { status: 400 }
     );
   }
-  if (sitePassword && sitePassword !== pass) {
-    return new Response(
-      JSON.stringify({
-        error: {
-          message: "Invalid password.",
-        },
-      }),
-      { status: 401 }
-    );
-  }
-  if (
-    import.meta.env.PROD &&
-    !(await verifySignature(
-      { t: time, m: messages?.[messages.length - 1]?.content || "" },
-      sign
-    ))
-  ) {
-    return new Response(
-      JSON.stringify({
-        error: {
-          message: "Invalid signature.",
-        },
-      }),
-      { status: 401 }
-    );
-  }
-  const initOptions = generatePayload(apiKey, messages, mode);
-  // #vercel-disable-blocks
-  if (httpsProxy) initOptions.dispatcher = new ProxyAgent(httpsProxy);
-  // #vercel-end
 
+  const initOptions = generatePayload(apiKey, messages, mode);
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   const response = (await fetch(
     `${baseUrl}/v1/chat/completions`,

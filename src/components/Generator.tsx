@@ -1,6 +1,5 @@
 import { Index, Show, createSignal, onCleanup, onMount } from "solid-js";
 import { useThrottleFn } from "solidjs-use";
-import { generateSignature } from "@/utils/auth";
 import MessageItem from "./MessageItem";
 import SystemRoleSettings from "./SystemRoleSettings";
 import ErrorMessageItem from "./ErrorMessageItem";
@@ -210,7 +209,6 @@ export default () => {
     setLoading(true);
     setCurrentAssistantMessage("");
     setCurrentError(null);
-    const storagePassword = localStorage.getItem("pass");
     try {
       const controller = new AbortController();
       setController(controller);
@@ -221,20 +219,11 @@ export default () => {
           content: currentSystemRoleSettings(),
         });
       }
-      const timestamp = Date.now();
       const response = await fetch("/api/generate", {
         method: "POST",
         body: JSON.stringify({
           mode,
           messages: requestMessageList,
-          time: timestamp,
-          pass: storagePassword,
-          sign: await generateSignature({
-            t: timestamp,
-            m:
-              requestMessageList?.[requestMessageList.length - 1]?.content ||
-              "",
-          }),
         }),
         signal: controller.signal,
       });
