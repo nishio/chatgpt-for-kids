@@ -16,7 +16,7 @@ const sitePassword = import.meta.env.SITE_PASSWORD;
 
 export const post: APIRoute = async (context) => {
   const body = await context.request.json();
-  const { sign, time, messages, pass } = body;
+  const { sign, time, messages, pass, mode } = body;
   if (!messages) {
     return new Response(
       JSON.stringify({
@@ -53,7 +53,7 @@ export const post: APIRoute = async (context) => {
       { status: 401 }
     );
   }
-  const initOptions = generatePayload(apiKey, messages);
+  const initOptions = generatePayload(apiKey, messages, mode);
   // #vercel-disable-blocks
   if (httpsProxy) initOptions.dispatcher = new ProxyAgent(httpsProxy);
   // #vercel-end

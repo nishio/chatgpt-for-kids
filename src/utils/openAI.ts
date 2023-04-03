@@ -2,24 +2,27 @@ import { createParser } from "eventsource-parser";
 import type { ParsedEvent, ReconnectInterval } from "eventsource-parser";
 import type { ChatMessage } from "@/types";
 
-const model = "gpt-4";
-
 export const generatePayload = (
   apiKey: string,
-  messages: ChatMessage[]
-): RequestInit & { dispatcher?: any } => ({
-  headers: {
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${apiKey}`,
-  },
-  method: "POST",
-  body: JSON.stringify({
-    model,
-    messages,
-    temperature: 0.0,
-    stream: true,
-  }),
-});
+  messages: ChatMessage[],
+  mode: string
+): RequestInit & { dispatcher?: any } => {
+  const model = mode === "gpt4" ? "gpt-4" : "gpt-3.5-turbo";
+  console.log("model", model);
+  return {
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`,
+    },
+    method: "POST",
+    body: JSON.stringify({
+      model,
+      messages,
+      temperature: 0.0,
+      stream: true,
+    }),
+  };
+};
 
 export const parseOpenAIStream = (rawResponse: Response) => {
   const encoder = new TextEncoder();

@@ -39,6 +39,7 @@ export default () => {
   const [loading, setLoading] = createSignal(false);
   const [controller, setController] = createSignal<AbortController>(null);
   const [numToken, setNumToken] = createSignal(0);
+  const [lastMode, setLastMode] = createSignal("gpt4");
 
   async function signInAnonymously(auth): Promise<string> {
     try {
@@ -177,10 +178,11 @@ export default () => {
     localStorage.setItem("systemRoleSettings", currentSystemRoleSettings());
   };
 
-  const handleButtonClick = async () => {
+  const sendMessage = async (mode: string) => {
     const inputValue = inputRef.value;
     if (!inputValue) return;
 
+    setLastMode(mode);
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-expect-error
     if (window?.umami) umami.trackEvent("chat_generate");
@@ -192,7 +194,7 @@ export default () => {
     setMessageList([...messageList(), m]);
     saveChatMessage("firstroom", m);
 
-    requestWithLatestMessage();
+    requestWithLatestMessage(mode);
   };
 
   const smoothToBottom = useThrottleFn(
@@ -204,7 +206,7 @@ export default () => {
     true
   );
 
-  const requestWithLatestMessage = async () => {
+  const requestWithLatestMessage = async (mode: string) => {
     setLoading(true);
     setCurrentAssistantMessage("");
     setCurrentError(null);
@@ -223,6 +225,7 @@ export default () => {
       const response = await fetch("/api/generate", {
         method: "POST",
         body: JSON.stringify({
+          mode,
           messages: requestMessageList,
           time: timestamp,
           pass: storagePassword,
@@ -308,7 +311,7 @@ export default () => {
       if (lastMessage.role === "assistant")
         setMessageList(messageList().slice(0, -1));
 
-      requestWithLatestMessage();
+      requestWithLatestMessage(lastMode());
     }
   };
 
@@ -372,12 +375,20 @@ export default () => {
           />
         </div>
         <div>
+          送る:
           <button
-            onClick={handleButtonClick}
+            onClick={() => sendMessage("gpt3")}
             disabled={systemRoleEditing()}
             gen-slate-btn
           >
-            送る
+            GPT-3.5(速い, 1円)
+          </button>{" "}
+          <button
+            onClick={() => sendMessage("gpt4")}
+            disabled={systemRoleEditing()}
+            gen-slate-btn
+          >
+            GPT-4(賢い, 40円)
           </button>
           {/* <span>(トークン: {numToken})</span> */}
         </div>
@@ -390,8 +401,8 @@ export default () => {
           >
             過去ログを隠す
           </button>
-            <a href="https://scrapbox.io/nishio/%E4%B8%AD%E9%AB%98%E7%94%9F%E3%81%AE%E3%81%9F%E3%82%81%E3%81%AEChatGPT#642a7087aff09e0000efee0e">
-              [?]
+          <a href="https://scrapbox.io/nishio/%E4%B8%AD%E9%AB%98%E7%94%9F%E3%81%AE%E3%81%9F%E3%82%81%E3%81%AEChatGPT#642a7087aff09e0000efee0e">
+            [?]
           </a>{" "}
           <button onClick={copy_log} gen-slate-btn>
             この会話をコピー
