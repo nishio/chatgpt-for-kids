@@ -1,10 +1,8 @@
 import { Show } from "solid-js";
 import IconEnv from "./icons/Env";
-import IconX from "./icons/X";
 import type { Accessor, Setter } from "solid-js";
 
 interface Props {
-  canEdit: Accessor<boolean>;
   systemRoleEditing: Accessor<boolean>;
   setSystemRoleEditing: Setter<boolean>;
   currentSystemRoleSettings: Accessor<string>;
@@ -21,34 +19,43 @@ export default (props: Props) => {
 
   return (
     <div class="my-4">
-      {/* <Show when={!props.systemRoleEditing()}>
+      <Show when={!props.systemRoleEditing()}>
         <Show when={props.currentSystemRoleSettings()}>
           <div>
-            <div class="fi gap-1 op-50 dark:op-60">
-              <Show when={props.canEdit()} fallback={<IconEnv />}>
-                <span onClick={() => props.setCurrentSystemRoleSettings('')} class="sys-edit-btn p-1 rd-50%" > <IconX /> </span>
-              </Show>
-              <span>System Role: </span>
-            </div>
-            <div class="mt-1">
-              {props.currentSystemRoleSettings()}
-            </div>
+            <span
+              onClick={() =>
+                props.setSystemRoleEditing(!props.systemRoleEditing())
+              }
+              class="sys-edit-btn"
+            >
+              <IconEnv />
+              <span>役割設定</span>
+            </span>
+            <a href="https://scrapbox.io/nishio/%E4%B8%AD%E9%AB%98%E7%94%9F%E3%81%AE%E3%81%9F%E3%82%81%E3%81%AEChatGPT#642a8166aff09e00002c0fc4">
+              [?]
+            </a>
           </div>
         </Show>
-        <Show when={!props.currentSystemRoleSettings() && props.canEdit()}>
-          <span onClick={() => props.setSystemRoleEditing(!props.systemRoleEditing())} class="sys-edit-btn">
+
+        <Show when={!props.currentSystemRoleSettings()}>
+          <span
+            onClick={() =>
+              props.setSystemRoleEditing(!props.systemRoleEditing())
+            }
+            class="sys-edit-btn"
+          >
             <IconEnv />
             <span>Add System Role</span>
           </span>
         </Show>
       </Show>
-      <Show when={props.systemRoleEditing() && props.canEdit()}>
+
+      <Show when={props.systemRoleEditing()}>
         <div>
           <div class="fi gap-1 op-50 dark:op-60">
             <IconEnv />
-            <span>System Role:</span>
+            <span>役割設定:</span>
           </div>
-          <p class="my-2 leading-normal text-sm op-50 dark:op-60">Gently instruct the assistant and set the behavior of the assistant.</p>
           <div>
             <textarea
               ref={systemInputRef!}
@@ -57,13 +64,14 @@ export default (props: Props) => {
               autofocus
               rows="3"
               gen-textarea
+              value={props.currentSystemRoleSettings()}
             />
           </div>
           <button onClick={handleButtonClick} gen-slate-btn>
-            Set
+            設定
           </button>
         </div>
-      </Show> */}
+      </Show>
     </div>
   );
 };

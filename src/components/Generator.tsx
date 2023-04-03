@@ -26,10 +26,13 @@ interface ChatRoom {
   name: string;
 }
 
+const DEFALUT_SYSTEM_ROLE =
+  "You are a helpful teacher of Japanese junior high school student. Answer as concisely as possible. Answer in Japanese unless the question is asked in English. It is most important to encourage students to take actions.";
+
 export default () => {
   let inputRef: HTMLTextAreaElement;
   const [currentSystemRoleSettings, setCurrentSystemRoleSettings] =
-    createSignal("");
+    createSignal(DEFALUT_SYSTEM_ROLE);
   const [systemRoleEditing, setSystemRoleEditing] = createSignal(false);
   const [messageList, setMessageList] = createSignal<ChatMessage[]>([]);
   const [currentError, setCurrentError] = createSignal<ErrorMessage>();
@@ -311,7 +314,6 @@ export default () => {
   return (
     <div my-6>
       <SystemRoleSettings
-        canEdit={() => messageList().length === 0}
         systemRoleEditing={systemRoleEditing}
         setSystemRoleEditing={setSystemRoleEditing}
         currentSystemRoleSettings={currentSystemRoleSettings}
