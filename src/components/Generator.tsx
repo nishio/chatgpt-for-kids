@@ -25,6 +25,7 @@ interface ChatRoom {
   id: string;
   name: string;
 }
+const [selectedRoomId, setSelectedRoomId] = createSignal("");
 
 const DEFALUT_SYSTEM_ROLE =
   "You are a helpful teacher of Japanese junior high school student. Answer as concisely as possible. Answer in Japanese unless the question is asked in English. It is most important to encourage students to take actions.";
@@ -51,6 +52,33 @@ export default () => {
       console.error("Error signing in anonymously: ", error);
       return "";
     }
+  }
+  async function fetchRooms(): Promise<ChatRoom[]> {
+    const userId = await signInAnonymously(auth);
+    const rooms: ChatRoom[] = [];
+    const querySnapshot = await db
+      .collection("users")
+      .doc(userId)
+      .collection("rooms")
+      .get();
+
+    querySnapshot.forEach((doc) => {
+      rooms.push({ id: doc.id, name: doc.data().name });
+    });
+
+    return rooms;
+  }
+  const [roomList, setRoomList] = createSignal<ChatRoom[]>([]);
+
+  async function createNewRoom(roomName: string): Promise<string> {
+    const userId = await signInAnonymously(auth);
+    const roomRef = await db
+      .collection("users")
+      .doc(userId)
+      .collection("rooms")
+      .add({ name: roomName });
+
+    return roomRef.id;
   }
 
   const copy_log = () => {
@@ -89,11 +117,12 @@ export default () => {
 
   async function getOrCreateFirstRoom(): Promise<string> {
     const userId = await signInAnonymously(auth);
+    const roomId = selectedRoomId();
     const roomRef = db
       .collection("users")
       .doc(userId)
       .collection("rooms")
-      .doc("firstroom");
+      .doc(roomId);
     const roomDoc = await roomRef.get();
 
     if (!roomDoc.exists) {
@@ -143,7 +172,7 @@ export default () => {
   }
 
   const saveMessages = async () => {
-    const roomId = "firstroom";
+    const roomId = selectedRoomId();
     messageList().forEach((message) => {
       saveChatMessage(roomId, message);
     });
@@ -156,6 +185,15 @@ export default () => {
     db = firebase.firestore();
     // @ts-ignore
     window.saveMessages = saveMessages;
+
+    fetchRooms().then((rooms) => setRoomList(rooms));
+
+    const storedRoomId = localStorage.getItem("selectedRoomId") || "firstroom";
+    setSelectedRoomId(storedRoomId);
+    getOrCreateFirstRoom().then((roomId) => {
+      setSelectedRoomId(roomId);
+      restoreChatLog(roomId);
+    });
 
     getOrCreateFirstRoom().then(restoreChatLog);
 
@@ -317,6 +355,34 @@ export default () => {
 
   return (
     <div my-6>
+      <select
+        value={selectedRoomId()}
+        onChange={(e) => {
+          setSelectedRoomId(e.currentTarget.value);
+          restoreChatLog(e.currentTarget.value);
+          localStorage.setItem("selectedRoomId", e.currentTarget.value);
+        }}
+      >
+        <Index each={roomList()}>
+          {(room) => <option value={room().id}>{room().name}</option>}
+        </Index>
+      </select>
+      <button
+        onClick={async () => {
+          const roomName = prompt("新しいルームの名前を入力してください");
+          if (roomName) {
+            const newRoomId = await createNewRoom(roomName);
+            const updatedRooms = await fetchRooms();
+            setRoomList(updatedRooms);
+            setSelectedRoomId(newRoomId);
+            restoreChatLog(newRoomId);
+            localStorage.setItem("selectedRoomId", newRoomId);
+          }
+        }}
+      >
+        新規ルームを作成
+      </button>
+
       <SystemRoleSettings
         systemRoleEditing={systemRoleEditing}
         setSystemRoleEditing={setSystemRoleEditing}
