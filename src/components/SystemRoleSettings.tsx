@@ -7,6 +7,7 @@ interface Props {
   setSystemRoleEditing: Setter<boolean>;
   currentSystemRoleSettings: Accessor<string>;
   setCurrentSystemRoleSettings: Setter<string>;
+  saveSystemRole: () => Promise<void>;
 }
 
 export default (props: Props) => {
@@ -15,6 +16,7 @@ export default (props: Props) => {
   const handleButtonClick = () => {
     props.setCurrentSystemRoleSettings(systemInputRef.value);
     props.setSystemRoleEditing(false);
+    props.saveSystemRole();
   };
 
   return (

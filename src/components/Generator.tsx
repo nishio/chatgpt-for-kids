@@ -178,6 +178,30 @@ export default () => {
     });
   };
 
+  async function saveSystemRole() {
+    const roomId = selectedRoomId();
+    const systemRole = currentSystemRoleSettings();
+    const userId = await signInAnonymously(auth);
+    await db
+      .collection("users")
+      .doc(userId)
+      .collection("rooms")
+      .doc(roomId)
+      .update({ systemRole });
+  }
+
+  async function fetchSystemRole(roomId: string): Promise<string> {
+    const userId = await signInAnonymously(auth);
+    const roomDoc = await db
+      .collection("users")
+      .doc(userId)
+      .collection("rooms")
+      .doc(roomId)
+      .get();
+
+    return roomDoc.data()?.systemRole || DEFALUT_SYSTEM_ROLE;
+  }
+
   onMount(() => {
     firebase.initializeApp(firebaseConfig);
     // @ts-ignore
@@ -194,19 +218,6 @@ export default () => {
       setSelectedRoomId(roomId);
       restoreChatLog(roomId);
     });
-
-    getOrCreateFirstRoom().then(restoreChatLog);
-
-    console.log(restoreChatLog("firstroom"));
-
-    try {
-      if (localStorage.getItem("systemRoleSettings"))
-        setCurrentSystemRoleSettings(
-          localStorage.getItem("systemRoleSettings")
-        );
-    } catch (err) {
-      console.error(err);
-    }
 
     window.addEventListener("beforeunload", handleBeforeUnload);
     onCleanup(() => {
@@ -357,11 +368,14 @@ export default () => {
     <div my-6>
       <select
         value={selectedRoomId()}
-        onChange={(e) => {
+        onChange={async (e) => {
           setSelectedRoomId(e.currentTarget.value);
           restoreChatLog(e.currentTarget.value);
           localStorage.setItem("selectedRoomId", e.currentTarget.value);
+          const systemRole = await fetchSystemRole(e.currentTarget.value);
+          setCurrentSystemRoleSettings(systemRole);
         }}
+        class="gen-slate-select"
       >
         <Index each={roomList()}>
           {(room) => <option value={room().id}>{room().name}</option>}
@@ -388,6 +402,7 @@ export default () => {
         setSystemRoleEditing={setSystemRoleEditing}
         currentSystemRoleSettings={currentSystemRoleSettings}
         setCurrentSystemRoleSettings={setCurrentSystemRoleSettings}
+        saveSystemRole={saveSystemRole}
       />
       <Index each={messageList()}>
         {(message, index) => (
