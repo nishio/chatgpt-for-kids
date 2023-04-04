@@ -338,7 +338,11 @@ export default () => {
         )}
       </Index>
       {currentAssistantMessage() && (
-        <MessageItem role="assistant" message={currentAssistantMessage} />
+        <MessageItem
+          role="assistant"
+          message={currentAssistantMessage}
+          to_use={true}
+        />
       )}
       {currentError() && (
         <ErrorMessageItem data={currentError()} onRetry={retryLastFetch} />

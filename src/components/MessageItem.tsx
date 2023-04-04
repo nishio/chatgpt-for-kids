@@ -10,7 +10,7 @@ import type { ChatMessage } from "@/types";
 interface Props {
   role: ChatMessage["role"];
   message: Accessor<string> | string;
-  to_use: Accessor<boolean>;
+  to_use: boolean;
   showRetry?: Accessor<boolean>;
   onRetry?: () => void;
 }
@@ -70,7 +70,7 @@ export default ({ role, message, to_use, showRetry, onRetry }: Props) => {
 
     return "";
   };
-  const checkbox = <input type="checkbox" checked={to_use()} />;
+  const checkbox = <input type="checkbox" checked={to_use} />;
   return (
     <div class="py-2 -mx-4 px-4 transition-colors md:hover:bg-slate/3">
       <div class="flex gap-3 rounded-lg" class:op-75={role === "user"}>
