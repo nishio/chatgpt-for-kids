@@ -383,7 +383,14 @@ export default () => {
       </select>
       <button
         onClick={async () => {
-          const roomName = prompt("新しいルームの名前を入力してください");
+          const currentDate = new Date();
+          const defaultRoomName = `${currentDate.getFullYear()}-${
+            currentDate.getMonth() + 1
+          }-${currentDate.getDate()} ${currentDate.getHours()}:${currentDate.getMinutes()}`;
+          const roomName = prompt(
+            "新しいルームの名前を入力してください",
+            defaultRoomName
+          );
           if (roomName) {
             const newRoomId = await createNewRoom(roomName);
             const updatedRooms = await fetchRooms();
@@ -393,6 +400,7 @@ export default () => {
             localStorage.setItem("selectedRoomId", newRoomId);
           }
         }}
+        gen-slate-btn
       >
         新規ルームを作成
       </button>
