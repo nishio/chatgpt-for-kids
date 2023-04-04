@@ -27,6 +27,7 @@ interface ChatRoom {
 }
 const [selectedRoomId, setSelectedRoomId] = createSignal("");
 const [enableSmoothToBottom, setEnableSmoothToBottom] = createSignal(true);
+const [enableMelody, setEnableMelody] = createSignal(true);
 
 const DEFALUT_SYSTEM_ROLE =
   "You are a helpful teacher of Japanese junior high school student. Answer as concisely as possible. Answer in Japanese unless the question is asked in English. It is most important to encourage students to take actions.";
@@ -230,9 +231,6 @@ export default () => {
   }
 
   onMount(() => {
-    // @ts-ignore
-    window.playMelody = playMelody;
-
     firebase.initializeApp(firebaseConfig);
     // @ts-ignore
     auth = firebase.auth();
@@ -294,12 +292,18 @@ export default () => {
     try {
       const controller = new AbortController();
       setController(controller);
-      const requestMessageList = [...messageList()];
+      // omit extra property
+      const requestMessageList = messageList().map(({ role, content }) => {
+        return {
+          role,
+          content,
+        };
+      });
+
       if (currentSystemRoleSettings()) {
         requestMessageList.unshift({
           role: "system",
           content: currentSystemRoleSettings(),
-          to_use: true,
         });
       }
       const response = await fetch("/api/generate", {
@@ -363,7 +367,9 @@ export default () => {
       setLoading(false);
       setController(null);
       inputRef.focus();
-      playMelody();
+      if (enableMelody()) {
+        playMelody();
+      }
     }
   };
 
@@ -393,7 +399,7 @@ export default () => {
   };
 
   const handleKeydown = (e: KeyboardEvent) => {
-    debounce(count_token, 1000)();
+    // debounce(count_token, 1000)();
   };
 
   return (
@@ -536,6 +542,14 @@ export default () => {
             onChange={(e) => setEnableSmoothToBottom(e.currentTarget.checked)}
           />
           自動スクロール
+        </label>
+        <label>
+          <input
+            type="checkbox"
+            checked={enableMelody()}
+            onChange={(e) => setEnableMelody(e.currentTarget.checked)}
+          />
+          完了時メロディ
         </label>
       </Show>
     </div>
