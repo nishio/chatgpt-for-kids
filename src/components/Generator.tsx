@@ -26,6 +26,7 @@ interface ChatRoom {
   name: string;
 }
 const [selectedRoomId, setSelectedRoomId] = createSignal("");
+const [enableSmoothToBottom, setEnableSmoothToBottom] = createSignal(true);
 
 const DEFALUT_SYSTEM_ROLE =
   "You are a helpful teacher of Japanese junior high school student. Answer as concisely as possible. Answer in Japanese unless the question is asked in English. It is most important to encourage students to take actions.";
@@ -302,10 +303,13 @@ export default () => {
           if (char === "\n" && currentAssistantMessage().endsWith("\n"))
             continue;
 
-          if (char)
+          if (char) {
             setCurrentAssistantMessage(currentAssistantMessage() + char);
+          }
 
-          // smoothToBottom()
+          if (enableSmoothToBottom()) {
+            smoothToBottom();
+          }
         }
         done = readerDone;
       }
@@ -497,6 +501,14 @@ export default () => {
             この会話をコピー
           </button>
         </div>
+        <label>
+          <input
+            type="checkbox"
+            checked={enableSmoothToBottom()}
+            onChange={(e) => setEnableSmoothToBottom(e.currentTarget.checked)}
+          />
+          自動スクロール
+        </label>
       </Show>
     </div>
   );
