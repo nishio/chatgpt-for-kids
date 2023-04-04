@@ -24,3 +24,16 @@
 .message table tbody tr:last-of-type {
   border-bottom: 2px solid #64748b40;
 }
+
+.gen-slate-select {
+  background-color: var(--slate-100);
+  color: var(--slate-800);
+  border: none;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 16px;
+  cursor: pointer;
+}
+.gen-slate-select:focus {
+  outline: none;
+}
