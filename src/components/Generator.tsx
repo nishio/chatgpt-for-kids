@@ -185,7 +185,8 @@ export default () => {
     return chatLog;
   }
 
-  async function saveChatMessage(roomId: string, chatMessage: ChatMessage) {
+  async function saveChatMessage(chatMessage: ChatMessage) {
+    const roomId = selectedRoomId();
     const userId = await signInAnonymously(auth);
     await db
       .collection("users")
@@ -271,7 +272,7 @@ export default () => {
       to_use: true,
     };
     setMessageList([...messageList(), m]);
-    saveChatMessage("firstroom", m);
+    saveChatMessage(m);
 
     requestWithLatestMessage(mode);
   };
@@ -361,7 +362,7 @@ export default () => {
         to_use: true,
       };
       setMessageList([...messageList(), m]);
-      saveChatMessage("firstroom", m);
+      saveChatMessage(m);
 
       setCurrentAssistantMessage("");
       setLoading(false);
