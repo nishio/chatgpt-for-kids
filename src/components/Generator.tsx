@@ -10,6 +10,10 @@ import firebase from "firebase/compat/app";
 import "firebase/compat/firestore";
 import "firebase/compat/auth";
 import { firebaseConfig, signInAnonymously } from "../utils/firebaseUtils";
+import {
+  translateToEnglish,
+  translateToJapanese,
+} from "../utils/translateRequest";
 
 let auth, db;
 
@@ -53,61 +57,6 @@ const saveApiKey = () => {
     localStorage.setItem("api_key", apiKey);
   }
 };
-
-async function translateToEnglish(text) {
-  console.log("translateToEnglish", text);
-  const requestMessageList = [
-    {
-      role: "system",
-      content: "Translate the following text to English:",
-    },
-    {
-      role: "user",
-      content: text,
-    },
-  ];
-
-  const response = await fetch("/api/generate", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      mode: "jaen",
-      messages: requestMessageList,
-      apiKey: localStorage.getItem("api_key") ?? "",
-    }),
-  });
-
-  return response;
-}
-
-async function translateToJapanese(text) {
-  const requestMessageList = [
-    {
-      role: "system",
-      content: "Translate the following text to Japanese:",
-    },
-    {
-      role: "user",
-      content: text,
-    },
-  ];
-
-  const response = await fetch("/api/generate", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      mode: "enja",
-      messages: requestMessageList,
-      apiKey: localStorage.getItem("api_key") ?? "",
-    }),
-  });
-
-  return response;
-}
 
 export default () => {
   let inputRef: HTMLTextAreaElement;
