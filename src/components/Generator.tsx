@@ -5,19 +5,11 @@ import SystemRoleSettings from "./SystemRoleSettings";
 import ErrorMessageItem from "./ErrorMessageItem";
 import type { ChatMessage, ErrorMessage } from "@/types";
 
+import { playMelody } from "../utils/music";
 import firebase from "firebase/compat/app";
 import "firebase/compat/firestore";
 import "firebase/compat/auth";
-// ここでFirebaseの設定をインポートまたは定義します
-const firebaseConfig = {
-  apiKey: "AIzaSyBa_r-q6Mf4I0VaIZ8yTXDa1M6SEjCsutM",
-  authDomain: "chatgpt-d546a.firebaseapp.com",
-  projectId: "chatgpt-d546a",
-  storageBucket: "chatgpt-d546a.appspot.com",
-  messagingSenderId: "699273813437",
-  appId: "1:699273813437:web:47a8b6e4b8790aa21346d4",
-  measurementId: "G-T2Z8RMCC3N",
-};
+import { firebaseConfig, signInAnonymously } from "../utils/firebaseUtils";
 
 let auth, db;
 
@@ -46,41 +38,6 @@ export default () => {
   const [numToken, setNumToken] = createSignal(0);
   const [lastMode, setLastMode] = createSignal("gpt4");
 
-  function playNote(audioContext, frequency, startTime, duration) {
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-    gainNode.gain.setValueAtTime(0, startTime);
-    gainNode.gain.linearRampToValueAtTime(1, startTime + 0.01);
-    gainNode.gain.linearRampToValueAtTime(0, startTime + duration);
-    oscillator.frequency.value = frequency;
-    oscillator.type = "sine";
-    oscillator.start(startTime);
-    oscillator.stop(startTime + duration);
-  }
-
-  function playMelody() {
-    const audioContext = new (window.AudioContext || window.AudioContext)();
-    const startTime = audioContext.currentTime;
-    const noteDuration = 0.3;
-
-    playNote(audioContext, 261.63, startTime, noteDuration); // C4
-    playNote(audioContext, 329.63, startTime + noteDuration, noteDuration); // E4
-    playNote(audioContext, 392.0, startTime + noteDuration * 2, noteDuration); // G4
-    playNote(audioContext, 523.25, startTime + noteDuration * 3, noteDuration); // C5
-  }
-
-  async function signInAnonymously(auth): Promise<string> {
-    try {
-      const result = await auth.signInAnonymously();
-      return result.user?.uid || "";
-    } catch (error) {
-      console.error("Error signing in anonymously: ", error);
-      return "";
-    }
-  }
   async function fetchRooms(): Promise<ChatRoom[]> {
     const userId = await signInAnonymously(auth);
     const rooms: ChatRoom[] = [];
