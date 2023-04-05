@@ -40,6 +40,20 @@ async function fetchRooms(): Promise<ChatRoom[]> {
   return rooms;
 }
 
+const saveApiKey = () => {
+  const current = localStorage.getItem("api_key");
+  const apiKey = prompt(
+    `APIキーを入力してください(空白で削除, 現在 ${
+      current === undefined ? "未設定" : current.slice(0, 4) + "..."
+    })`
+  );
+  if (apiKey === null) {
+    localStorage.removeItem("api_key");
+  } else {
+    localStorage.setItem("api_key", apiKey);
+  }
+};
+
 export default () => {
   let inputRef: HTMLTextAreaElement;
   const [currentSystemRoleSettings, setCurrentSystemRoleSettings] =
@@ -210,9 +224,11 @@ export default () => {
         body: JSON.stringify({
           mode,
           messages: requestMessageList,
+          apiKey: localStorage.getItem("api_key") ?? "",
         }),
         signal: controller.signal,
       });
+
       if (!response.ok) {
         const error = await response.json();
         console.error(error.error);
@@ -419,37 +435,44 @@ export default () => {
           {/* <span>(トークン: {numToken})</span> */}
         </div>
         <div>
-          <button
+          <label>
+            <input
+              type="checkbox"
+              checked={enableSmoothToBottom()}
+              onChange={(e) => setEnableSmoothToBottom(e.currentTarget.checked)}
+            />
+            自動スクロール
+          </label>{" "}
+          <label>
+            <input
+              type="checkbox"
+              checked={enableMelody()}
+              onChange={(e) => setEnableMelody(e.currentTarget.checked)}
+            />
+            完了時メロディ
+          </label>{" "}
+          {/* <button
             title="Clear"
             onClick={clear}
             disabled={systemRoleEditing()}
             gen-slate-btn
           >
             過去ログを隠す
-          </button>
+          </button> 
           <a href="https://scrapbox.io/nishio/%E4%B8%AD%E9%AB%98%E7%94%9F%E3%81%AE%E3%81%9F%E3%82%81%E3%81%AEChatGPT#642a7087aff09e0000efee0e">
             [?]
           </a>{" "}
+          */}
           <button onClick={copy_log} gen-slate-btn>
             この会話をコピー
           </button>
         </div>
-        <label>
-          <input
-            type="checkbox"
-            checked={enableSmoothToBottom()}
-            onChange={(e) => setEnableSmoothToBottom(e.currentTarget.checked)}
-          />
-          自動スクロール
-        </label>
-        <label>
-          <input
-            type="checkbox"
-            checked={enableMelody()}
-            onChange={(e) => setEnableMelody(e.currentTarget.checked)}
-          />
-          完了時メロディ
-        </label>
+        <div>
+          課金:
+          <button onClick={saveApiKey} gen-slate-btn>
+            APIキーを指定
+          </button>
+        </div>
       </Show>
     </div>
   );

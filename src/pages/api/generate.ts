@@ -4,12 +4,14 @@ import { fetch } from "undici";
 import { generatePayload, parseOpenAIStream } from "@/utils/openAI";
 import type { APIRoute } from "astro";
 
-const apiKey = import.meta.env.OPENAI_API_KEY;
+const DEFAULT_API_KEY = import.meta.env.OPENAI_API_KEY;
 const baseUrl = "https://api.openai.com";
 
 export const post: APIRoute = async (context) => {
   const body = await context.request.json();
   const { messages, mode } = body;
+  const apiKey = body.apiKey || DEFAULT_API_KEY;
+  console.log({ apiKey });
   if (!messages) {
     return new Response(
       JSON.stringify({
