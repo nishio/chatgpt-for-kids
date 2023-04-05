@@ -203,7 +203,7 @@ export default () => {
   const saveMessages = async () => {
     const roomId = selectedRoomId();
     messageList().forEach((message) => {
-      saveChatMessage(roomId, message);
+      saveChatMessage(message);
     });
   };
 
