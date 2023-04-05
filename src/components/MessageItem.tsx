@@ -20,6 +20,9 @@ export default ({ role, message, to_use, showRetry, onRetry }: Props) => {
     system: "bg-gradient-to-r from-gray-300 via-gray-200 to-gray-300",
     user: "bg-gradient-to-r from-purple-400 to-yellow-400",
     assistant: "bg-gradient-to-r from-yellow-200 via-green-200 to-green-300",
+
+    user_ja: "bg-gradient-to-r from-purple-400 to-yellow-400",
+    assistant_ja: "bg-gradient-to-r from-yellow-200 via-green-200 to-green-300",
   };
   const [source] = createSignal("");
   const { copy, copied } = useClipboard({ source, copiedDuring: 1000 });

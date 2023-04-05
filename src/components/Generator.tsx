@@ -22,7 +22,7 @@ const [enableSmoothToBottom, setEnableSmoothToBottom] = createSignal(true);
 const [enableMelody, setEnableMelody] = createSignal(true);
 
 const DEFALUT_SYSTEM_ROLE =
-  "You are a helpful teacher of Japanese junior high school student. Answer as concisely as possible. Answer in Japanese unless the question is asked in English. It is most important to encourage students to take actions.";
+  "You are a helpful teacher of junior high school student. Answer as concisely as possible. Answer in the same language with the question. It is most important to encourage students to take actions.";
 
 async function fetchRooms(): Promise<ChatRoom[]> {
   const userId = await signInAnonymously(auth);
@@ -53,6 +53,61 @@ const saveApiKey = () => {
     localStorage.setItem("api_key", apiKey);
   }
 };
+
+async function translateToEnglish(text) {
+  console.log("translateToEnglish", text);
+  const requestMessageList = [
+    {
+      role: "system",
+      content: "Translate the following text to English:",
+    },
+    {
+      role: "user",
+      content: text,
+    },
+  ];
+
+  const response = await fetch("/api/generate", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      mode: "jaen",
+      messages: requestMessageList,
+      apiKey: localStorage.getItem("api_key") ?? "",
+    }),
+  });
+
+  return response;
+}
+
+async function translateToJapanese(text) {
+  const requestMessageList = [
+    {
+      role: "system",
+      content: "Translate the following text to Japanese:",
+    },
+    {
+      role: "user",
+      content: text,
+    },
+  ];
+
+  const response = await fetch("/api/generate", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      mode: "enja",
+      messages: requestMessageList,
+      apiKey: localStorage.getItem("api_key") ?? "",
+    }),
+  });
+
+  return response;
+}
 
 export default () => {
   let inputRef: HTMLTextAreaElement;
@@ -169,24 +224,57 @@ export default () => {
     restoreChatLog(storedRoomId);
   });
 
-  const sendMessage = async (mode: string) => {
+  const sendMessage = async (mode) => {
     const inputValue = inputRef.value;
-    if (!inputValue) return;
-
-    setLastMode(mode);
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-expect-error
-    if (window?.umami) umami.trackEvent("chat_generate");
+    if (!inputValue && mode !== "enja") return;
     inputRef.value = "";
-    const m: ChatMessage = {
-      role: "user",
-      content: inputValue,
-      to_use: true,
-    };
-    setMessageList([...messageList(), m]);
-    saveChatMessage(m);
 
-    requestWithLatestMessage(mode);
+    if (["gpt4", "gpt3"].includes(mode)) {
+      setLastMode(mode);
+    }
+
+    if (mode === "jaen") {
+      const m_ja: ChatMessage = {
+        role: "user_ja",
+        content: inputValue,
+        to_use: false,
+      };
+      saveChatMessage(m_ja);
+      setMessageList([...messageList(), m_ja]);
+
+      await showResponse(await translateToEnglish(inputValue));
+      archiveCurrentMessage();
+
+      if (messageList().length > 0) {
+        const lastMessage = messageList()[messageList().length - 1];
+        const otherMessage = messageList().slice(0, -1);
+        if (lastMessage.role === "assistant") {
+          setMessageList([...otherMessage, { ...lastMessage, role: "user" }]);
+        }
+      }
+      requestWithLatestMessage(mode);
+    } else if (mode === "enja") {
+      const lastMessage = messageList()[messageList().length - 1];
+      console.log({ enja: lastMessage.content });
+      await showResponse(await translateToJapanese(lastMessage.content));
+      archiveCurrentMessage();
+
+      const newMessage = messageList()[messageList().length - 1];
+      const otherMessage = messageList().slice(0, -1);
+      setMessageList([
+        ...otherMessage,
+        { ...newMessage, role: "assistant_ja", to_use: false },
+      ]);
+    } else {
+      const m: ChatMessage = {
+        role: "user",
+        content: inputValue,
+        to_use: true,
+      };
+      setMessageList([...messageList(), m]);
+      saveChatMessage(m);
+      requestWithLatestMessage(mode);
+    }
   };
 
   const smoothToBottom = useThrottleFn(
@@ -206,12 +294,16 @@ export default () => {
       const controller = new AbortController();
       setController(controller);
       // omit extra property
-      const requestMessageList = messageList().map(({ role, content }) => {
-        return {
-          role,
-          content,
-        };
-      });
+      const requestMessageList = messageList()
+        .filter(({ role, to_use }) => {
+          return ["system", "assistant", "user"].includes(role) && to_use;
+        })
+        .map(({ role, content }) => {
+          return {
+            role,
+            content,
+          };
+        });
 
       if (currentSystemRoleSettings()) {
         requestMessageList.unshift({
@@ -229,36 +321,7 @@ export default () => {
         signal: controller.signal,
       });
 
-      if (!response.ok) {
-        const error = await response.json();
-        console.error(error.error);
-        setCurrentError(error.error);
-        throw new Error("Request failed");
-      }
-      const data = response.body;
-      if (!data) throw new Error("No data");
-
-      const reader = data.getReader();
-      const decoder = new TextDecoder("utf-8");
-      let done = false;
-
-      while (!done) {
-        const { value, done: readerDone } = await reader.read();
-        if (value) {
-          const char = decoder.decode(value);
-          if (char === "\n" && currentAssistantMessage().endsWith("\n"))
-            continue;
-
-          if (char) {
-            setCurrentAssistantMessage(currentAssistantMessage() + char);
-          }
-
-          if (enableSmoothToBottom()) {
-            smoothToBottom();
-          }
-        }
-        done = readerDone;
-      }
+      await showResponse(response);
     } catch (e) {
       console.error(e);
       setLoading(false);
@@ -266,6 +329,38 @@ export default () => {
       return;
     }
     archiveCurrentMessage();
+  };
+
+  const showResponse = async (response) => {
+    if (!response.ok) {
+      const error = await response.json();
+      console.error(error.error);
+      setCurrentError(error.error);
+      throw new Error("Request failed");
+    }
+    const data = response.body;
+    if (!data) throw new Error("No data");
+
+    const reader = data.getReader();
+    const decoder = new TextDecoder("utf-8");
+    let done = false;
+
+    while (!done) {
+      const { value, done: readerDone } = await reader.read();
+      if (value) {
+        const char = decoder.decode(value);
+        if (char === "\n" && currentAssistantMessage().endsWith("\n")) continue;
+
+        if (char) {
+          setCurrentAssistantMessage(currentAssistantMessage() + char);
+        }
+
+        if (enableSmoothToBottom()) {
+          smoothToBottom();
+        }
+      }
+      done = readerDone;
+    }
   };
 
   const archiveCurrentMessage = () => {
@@ -431,6 +526,20 @@ export default () => {
             gen-slate-btn
           >
             GPT-4(賢い, 40円)
+          </button>{" "}
+          <button
+            onClick={() => sendMessage("jaen")}
+            disabled={systemRoleEditing()}
+            gen-slate-btn
+          >
+            GPT3で英語にしてGPT4に送る
+          </button>{" "}
+          <button
+            onClick={() => sendMessage("enja")}
+            disabled={systemRoleEditing()}
+            gen-slate-btn
+          >
+            GPT3で日本語にする
           </button>
           {/* <span>(トークン: {numToken})</span> */}
         </div>
