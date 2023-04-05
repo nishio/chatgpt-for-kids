@@ -24,6 +24,22 @@ const [enableMelody, setEnableMelody] = createSignal(true);
 const DEFALUT_SYSTEM_ROLE =
   "You are a helpful teacher of Japanese junior high school student. Answer as concisely as possible. Answer in Japanese unless the question is asked in English. It is most important to encourage students to take actions.";
 
+async function fetchRooms(): Promise<ChatRoom[]> {
+  const userId = await signInAnonymously(auth);
+  const rooms: ChatRoom[] = [];
+  const querySnapshot = await db
+    .collection("users")
+    .doc(userId)
+    .collection("rooms")
+    .get();
+
+  querySnapshot.forEach((doc) => {
+    rooms.push({ id: doc.id, name: doc.data().name });
+  });
+
+  return rooms;
+}
+
 export default () => {
   let inputRef: HTMLTextAreaElement;
   const [currentSystemRoleSettings, setCurrentSystemRoleSettings] =
@@ -38,21 +54,6 @@ export default () => {
   const [numToken, setNumToken] = createSignal(0);
   const [lastMode, setLastMode] = createSignal("gpt4");
 
-  async function fetchRooms(): Promise<ChatRoom[]> {
-    const userId = await signInAnonymously(auth);
-    const rooms: ChatRoom[] = [];
-    const querySnapshot = await db
-      .collection("users")
-      .doc(userId)
-      .collection("rooms")
-      .get();
-
-    querySnapshot.forEach((doc) => {
-      rooms.push({ id: doc.id, name: doc.data().name });
-    });
-
-    return rooms;
-  }
   const [roomList, setRoomList] = createSignal<ChatRoom[]>([]);
 
   async function createNewRoom(roomName: string): Promise<string> {
@@ -76,46 +77,6 @@ export default () => {
         .join("\n")
     );
   };
-
-  function debounce(fn, delay) {
-    let timeout;
-    return function (...args) {
-      clearTimeout(timeout);
-      timeout = setTimeout(() => fn.apply(this, args), delay);
-    };
-  }
-
-  async function count_token(s) {
-    if (s === undefined) {
-      s = inputRef.value;
-    }
-    const response = await fetch("/api/count_token", {
-      method: "POST",
-      body: JSON.stringify({
-        text: inputRef.value,
-      }),
-    });
-    const num_token = await response.json();
-    console.log(num_token);
-    setNumToken(num_token.size);
-  }
-
-  async function getOrCreateFirstRoom(): Promise<string> {
-    const userId = await signInAnonymously(auth);
-    const roomId = selectedRoomId();
-    const roomRef = db
-      .collection("users")
-      .doc(userId)
-      .collection("rooms")
-      .doc(roomId);
-    const roomDoc = await roomRef.get();
-
-    if (!roomDoc.exists) {
-      await roomRef.set({ name: "firstroom" });
-    }
-
-    return roomRef.id;
-  }
 
   async function restoreChatLog(roomId: string): Promise<ChatMessage[]> {
     const userId = await signInAnonymously(auth);
@@ -157,13 +118,6 @@ export default () => {
       });
   }
 
-  const saveMessages = async () => {
-    const roomId = selectedRoomId();
-    messageList().forEach((message) => {
-      saveChatMessage(message);
-    });
-  };
-
   async function saveSystemRole() {
     const roomId = selectedRoomId();
     const systemRole = currentSystemRoleSettings();
@@ -198,21 +152,8 @@ export default () => {
 
     const storedRoomId = localStorage.getItem("selectedRoomId") || "firstroom";
     setSelectedRoomId(storedRoomId);
-    getOrCreateFirstRoom().then((roomId) => {
-      setSelectedRoomId(roomId);
-      restoreChatLog(roomId);
-    });
-
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    onCleanup(() => {
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-    });
+    restoreChatLog(storedRoomId);
   });
-
-  const handleBeforeUnload = () => {
-    localStorage.setItem("messageList", JSON.stringify(messageList()));
-    localStorage.setItem("systemRoleSettings", currentSystemRoleSettings());
-  };
 
   const sendMessage = async (mode: string) => {
     const inputValue = inputRef.value;
