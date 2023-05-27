@@ -48,7 +48,7 @@ const saveApiKey = () => {
   const current = localStorage.getItem("api_key");
   const apiKey = prompt(
     `APIキーを入力してください(空白で削除, 現在 ${
-      current === undefined ? "未設定" : current.slice(0, 4) + "..."
+      current === null ? "未設定" : current.slice(0, 4) + "..."
     })`
   );
   if (apiKey === null) {
