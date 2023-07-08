@@ -4,7 +4,7 @@ import { fetch } from "undici";
 import { generatePayload, parseOpenAIStream } from "@/utils/openAI";
 import type { APIRoute } from "astro";
 
-const DEFAULT_API_KEY = import.meta.env.OPENAI_API_KEY;
+const DEFAULT_API_KEY = "disabled"; // import.meta.env.OPENAI_API_KEY;
 const baseUrl = "https://api.openai.com";
 
 export const post: APIRoute = async (context) => {
